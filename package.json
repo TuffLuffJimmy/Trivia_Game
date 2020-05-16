@@ -1,0 +1,26 @@
+{
+  "name": "Trivia_Game",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TuffLuffJimmy/Trivia_Game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TuffLuffJimmy/Trivia_Game/issues"
+  },
+  "homepage": "https://github.com/TuffLuffJimmy/Trivia_Game#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "chalk": "^4.0.0",
+    "inquirer": "^7.1.0",
+    "shuffle-array": "^1.0.1"
+  }
+}
