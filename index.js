@@ -2,6 +2,13 @@
 const { prompt } = require('inquirer')
 const axios = require('axios')
 const chalk = require('chalk')
+const shuffle = require('shuffle-array')
+const { readFile, writeFile } = require('fs')
+const { promisify } = require('util')
+
+// synchronous read & write functions
+const readFileSync = promisify(readFile)
+const writeFileSync = promisify(writeFile)
 
 // shorter notation for console log
 const log = console.log
@@ -9,6 +16,8 @@ const log = console.log
 // ---- VARIABLES ----
 let categories = []
 let questions = []
+let index = 0
+let points = 0
 
 // ---- FUNCTIONS ----
 
@@ -29,6 +38,8 @@ const getCategories = () => {
 
 // allows user to choose to play game, view high scores, or exit game
 const mainMenu = () => {
+  points = 0
+  index = 0
   prompt({
     type: 'list',
     name: 'action',
@@ -41,8 +52,10 @@ const mainMenu = () => {
           getCategories()
           break
         case 'View Leaderboard':
+          viewLeaderboard()
           break
         case 'EXIT':
+          process.exit()
           break
       }
     })
@@ -78,10 +91,73 @@ const newGame = () => {
 
 // presents user with a question and possible answers
 const newQuestion = () => {
-  console.log(questions);
-  
+  if (index < 10) {
+    prompt({
+      type: 'list',
+      name: 'answer',
+      message: questions[index].question,
+      choices: shuffle(questions[index].incorrect_answers)
+    })
+      .then(({ answer }) => {
+        if (questions[index].correct_answer === answer) {
+          console.log(chalk.green('correct'));
+          points++
+          index++
+          newQuestion()
+        } else {
+          console.log(chalk.red('WRONG!'))
+          log(chalk.yellow(`The correct answer is actually ${questions[index].correct_answer}`))
+          index++
+          newQuestion()
+        }
+      })
+  } else {
+    endGame()
+  }
 }
 
+// Reads JSON file with leaderboard scores
+const viewLeaderboard = () => {
+  readFileSync('leaderboard.json', 'utf8')
+    .then( data => {
+      let leaderboard = JSON.parse(data)
+      let leaderboardSorted = leaderboard.sort((a,b) => {
+        return b.score - a.score
+      })
+      leaderboardSorted.forEach(record => {
+        log(`Username: ${record.username} | Score: ${record.score}`)
+      })
+      mainMenu()
+    })
+}
+
+// user inputs initials, writes to JSON file
+const endGame = () => {
+  log(chalk.yellow(`you got ${points} questions correct!`))
+  prompt({
+    type: 'input',
+    name: 'username',
+    message:'Input your initials'
+  })
+    .then(({username}) => {
+      readFileSync('leaderboard.json', 'utf8')
+        .then(data => {
+          let leaderboard = JSON.parse(data)
+          leaderboard.push({
+              username,
+              score: points
+          })
+          writeFileSync('leaderboard.json', JSON.stringify(leaderboard))
+            .then (() => {
+              mainMenu()
+            })
+            .catch(err =>log(err))
+        })
+        .catch(err => log(err))
+    })
+}
+
+// displays user's final score and allows them to add initials to high score
 
 
 mainMenu()
